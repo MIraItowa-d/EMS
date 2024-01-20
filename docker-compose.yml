@@ -2,7 +2,7 @@ version: "3"
 services:
 
   database:
-    image: mariadb:10.0
+    image: dbyyy/mariadb:v1
     restart: on-failure
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
@@ -11,9 +11,11 @@ services:
       - MYSQL_PASSWORD=partkeepr
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - network2
 
   partkeepr:
-    image: mhubig/partkeepr:latest
+    image: dbyyy/ems_system:latest
     restart: on-failure
     environment:
       - PARTKEEPR_DATABASE_HOST
@@ -61,16 +63,19 @@ services:
       - PARTKEEPR_USERS_LIMIT
       - PARTKEEPR_SECRET
     ports:
-      - "8080:80"
+      - "8070:80"
     volumes:
       - partkeepr-conf:/var/www/html/app/config
       - partkeepr-data:/var/www/html/data
       - partkeepr-web:/var/www/html/web
     depends_on:
       - database
+    networks:
+      - network2
+      - network3
 
   cronjob:
-    image: mhubig/partkeepr:latest
+    image: dbyyy/ems_system:latest
     restart: on-failure
     entrypoint: []
     command: bash -c "crontab /etc/cron.d/partkeepr && cron -f"
@@ -80,9 +85,18 @@ services:
       - partkeepr-web:/var/www/html/web
     depends_on:
       - partkeepr
+    networks:
+      - network3
 
 volumes:
   partkeepr-conf:
   partkeepr-data:
   partkeepr-web:
   mysql-data:
+
+networks:
+  network2:
+    driver: bridge
+  network3:
+    driver: bridge
+
